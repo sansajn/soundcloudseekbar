@@ -51,7 +51,8 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 		_paint.textAlign = Paint.Align.CENTER
 		_paint.textSize = textSize
 		val width = measuredWidth
-		canvas.drawText("${positionToString((pos * _length).toInt())}|${positionToString(_length)}",
+		val seconds = Math.ceil((pos * _length).toDouble()).toInt()
+		canvas.drawText("${positionToString(seconds)}|${positionToString(_length)}",
 			width/2f, 100 - (100 - textSize)/2f, _paint)
 	}
 

@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/playButton" />
+        app:layout_constraintTop_toBottomOf="@id/controlLayout" />
 
     <com.soundcloudseekbar.SoundCloudSeekBar
         android:id="@+id/timeLine2"
@@ -41,13 +41,26 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/timeLine3" />
 
-    <Button
-        android:id="@+id/playButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="play"
-        app:layout_constraintBottom_toBottomOf="@id/timeLine0"
+    <LinearLayout
+        android:id="@+id/controlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/timeLine0">
+
+        <Button
+            android:id="@+id/playButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="play" />
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="stop" />
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
