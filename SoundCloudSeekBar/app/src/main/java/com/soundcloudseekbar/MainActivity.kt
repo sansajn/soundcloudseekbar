@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
 		val progressUpdate = object : TimerTask() {
 			override fun run() {
 				runOnUiThread {
-					// tento sposob vynechava cisla 2 a 4, preco ?
 					_seconds += 1
 					val pos = Math.min(_seconds / SIM_LENGTH.toFloat(), 1f)
 					timeLine0.position(pos)

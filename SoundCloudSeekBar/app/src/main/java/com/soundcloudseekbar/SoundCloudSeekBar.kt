@@ -15,7 +15,9 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 
 	fun position(p: Float) {
 		_pos = p
-		_seek_pos = _pos
+		if (!_seeking)
+			_seek_pos = _pos
+
 		redraw()
 	}
 
@@ -32,12 +34,13 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 
 		_paint.style = Paint.Style.FILL
 
-		if (_pos == _seek_pos) {
+		if (!_seeking) {
 			drawPassed(_pos, canvas)
 			drawRemain(_pos, canvas)
 			drawPosition(_pos, canvas)
+			Log.d("SoundCloudSeekBar", "not seeking")
 		}
-		else {
+		else {  // seeking
 			drawPassed(_seek_pos, canvas)
 			drawRemain(_seek_pos, canvas)
 			drawSeek(canvas)
@@ -96,6 +99,9 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 	}*/
 
 	override fun onTouchEvent(event: MotionEvent): Boolean {
+		Log.d("SoundCloudSeekBar",
+			"${MotionEvent.actionToString(event.action)}, deviceId=${event.deviceId}")
+
 		if (event.action == MotionEvent.ACTION_DOWN) {
 			_down_pos = arrayOf(event.getX(0), event.getY(0))
 			return true
@@ -105,10 +111,12 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 			val seek = ((pos[0] - _down_pos[0]) / measuredWidth) * -1f  // revert direction
 			_seek_pos = clamp(_seek_pos + seek, 0f, 1f)
 			_down_pos = pos
+			_seeking = true
 			redraw()
 		}
 		else if (event.action == MotionEvent.ACTION_UP) {
 			_pos = _seek_pos
+			_seeking = false
 			redraw()
 		}
 
@@ -129,9 +137,13 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 
 	private var _length = 1  // in s
 	private var _pos = 0.0f  // from 0 to 1
+
+	// seeking logic
+	private var _seeking = false
 	private var _seek_pos = _pos  // position when seeking (becomes _pos on ACTION_UP event)
-	private val _paint = Paint()
 	private var _down_pos = arrayOf(0f, 0f)  // x, y
+
+	private val _paint = Paint()
 
 	// style
 	private val _passedColor: Int = Color.RED
