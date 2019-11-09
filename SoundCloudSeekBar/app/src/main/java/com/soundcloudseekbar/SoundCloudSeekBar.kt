@@ -150,8 +150,8 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 	private val _paint = Paint()
 
 	// style
-	private val _passedColor: Int = Color.RED
-	private val _remainColor: Int = Color.LTGRAY
-	private val _forwardSeekColor: Int = Color.YELLOW
-	private val _backSeekColor: Int = Color.GRAY
+	private val _passedColor: Int = Color.parseColor("#FF3400")
+	private val _remainColor: Int = Color.parseColor("#F2F2F2")
+	private val _forwardSeekColor: Int = Color.parseColor("#C62801")
+	private val _backSeekColor: Int = Color.parseColor("#BBBBBB")
 }
