@@ -54,9 +54,10 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 		_paint.textAlign = Paint.Align.CENTER
 		_paint.textSize = textSize
 		val width = measuredWidth
+		val height = measuredHeight
 		val seconds = Math.ceil((pos * _length).toDouble()).toInt()
 		canvas.drawText("${positionToString(seconds)}|${positionToString(_length)}",
-			width/2f, 100 - (100 - textSize)/2f, _paint)
+			width/2f, (height + textSize)/2f, _paint)
 	}
 
 	private fun positionToString(seconds: Int): String {
@@ -68,7 +69,8 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 		val width = measuredWidth
 		val passedWidth = pos * width
 		val left = Math.max(width/2f - passedWidth, 0f)
-		canvas.drawRect(left, 0f, width/2f, 100f, _paint)
+		val height = measuredHeight
+		canvas.drawRect(left, 0f, width/2f, height.toFloat(), _paint)
 	}
 
 	private fun drawRemain(pos: Float, canvas: Canvas) {
@@ -76,21 +78,23 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 		val width = measuredWidth
 		val passedWidth = pos * width
 		val remainWidth = Math.min(width - passedWidth, width/2f)
-		canvas.drawRect(width/2f, 0f, width/2f + remainWidth, 100f, _paint)
+		val height = measuredHeight
+		canvas.drawRect(width/2f, 0f, width/2f + remainWidth, height.toFloat(), _paint)
 	}
 
 	private fun drawSeek(canvas: Canvas) {
 		val width = measuredWidth
+		val height = measuredHeight
 
 		if (_seek_pos < _pos) {  // back seek
 			_paint.color = _backSeekColor
 			val dt = _pos - _seek_pos
-			canvas.drawRect(width/2f, 0f, width/2f + dt*width, 100f, _paint)
+			canvas.drawRect(width/2f, 0f, width/2f + dt*width, height.toFloat(), _paint)
 		}
 		else {  // forward seek
 			_paint.color = _forwardSeekColor
 			val dt = _seek_pos - _pos
-			canvas.drawRect(width/2f - dt*width, 0f, width/2f, 100f, _paint)
+			canvas.drawRect(width/2f - dt*width, 0f, width/2f, height.toFloat(), _paint)
 		}
 	}
 
