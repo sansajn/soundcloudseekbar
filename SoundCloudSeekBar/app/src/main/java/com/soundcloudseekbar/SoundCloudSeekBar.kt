@@ -1,6 +1,7 @@
 package com.soundcloudseekbar
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -32,20 +33,84 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 	override fun onDraw(canvas: Canvas) {
 		super.onDraw(canvas)
 
+		val duration = kotlin.system.measureNanoTime {
+			drawSeekBar(canvas)
+		}
+
+		Log.d("SoundCloudSeekBar", "drawSeekBar takes ${duration/1e6}ms")
+	}
+
+	private fun drawSeekBar(canvas: Canvas) {
+		val positiveHeights = Array<Float>(100, {n -> 1f})
+		drawBars(positiveHeights, canvas)
+
+		val negativeHeights = Array<Float>(100, {n -> -1f})
+		drawBars(negativeHeights, canvas)
+	}
+
+	private fun drawBars(heights: Array<Float>, canvas: Canvas) {
 		_paint.style = Paint.Style.FILL
 
-		if (!_seeking) {
-			drawPassed(_pos, canvas)
-			drawRemain(_pos, canvas)
-			drawPosition(_pos, canvas)
-			Log.d("SoundCloudSeekBar", "not seeking")
+		val barSize = dpToPx(4f)
+		val barMargin = dpToPx(3f)
+
+		_paint.strokeWidth = barSize
+
+		// passed
+		var seeked = 0
+		if (_seek_pos != _pos)
+			seeked = (Math.abs(_seek_pos - _pos) * 100).toInt()
+
+		val width = measuredWidth
+
+		var passed = 0
+		var centerOffset = 0f
+		if (_seek_pos < _pos) {  // back seek
+			passed = (_seek_pos * 100).toInt()
+			centerOffset = width/2f - passed * (barSize + barMargin)
 		}
-		else {  // seeking
-			drawPassed(_seek_pos, canvas)
-			drawRemain(_seek_pos, canvas)
-			drawSeek(canvas)
+		else if (_seek_pos > _pos) {  // forward seek
+			passed = (_pos * 100).toInt()
+			centerOffset = width/2f - (passed + seeked) * (barSize + barMargin)
+		}
+		else {
+			passed = (_pos * 100).toInt()
+			centerOffset = width/2f - passed * (barSize + barMargin)
+		}
+
+		// passed
+		_paint.color = _passedColor
+
+		val height = measuredHeight
+
+		for (n in 0 until passed) {
+			val x = centerOffset + n * (barSize + barMargin) + barSize/2f
+			canvas.drawLine(x, height/2f, x, (1f - heights[n]) * height/2f, _paint)
+		}
+
+		// seeked
+		if (_seek_pos < _pos)
+			_paint.color = _backSeekColor
+		else
+			_paint.color = _forwardSeekColor
+
+		for (n in passed until (passed + seeked)) {
+			val x = centerOffset + n * (barSize + barMargin) + barSize/2f
+			canvas.drawLine(x, height/2f, x, (1f - heights[n]) * height/2f, _paint)
+		}
+
+		// remain
+		_paint.color = _remainColor
+
+		for (n in (passed + seeked) until 100) {
+			val x = centerOffset + n * (barSize + barMargin) + barSize/2f
+			canvas.drawLine(x, height/2f, x, (1f - heights[n]) * height/2f, _paint)
+		}
+
+		if (_seek_pos != _pos)
 			drawPosition(_seek_pos, canvas)
-		}
+		else
+			drawPosition(_pos, canvas)
 	}
 
 	private fun drawPosition(pos: Float, canvas: Canvas) {
@@ -58,44 +123,6 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 		val seconds = Math.ceil((pos * _length).toDouble()).toInt()
 		canvas.drawText("${positionToString(seconds)}|${positionToString(_length)}",
 			width/2f, (height + textSize)/2f, _paint)
-	}
-
-	private fun positionToString(seconds: Int): String {
-		return DateUtils.formatElapsedTime(seconds.toLong())
-	}
-
-	private fun drawPassed(pos: Float, canvas: Canvas) {
-		_paint.color = _passedColor
-		val width = measuredWidth
-		val passedWidth = pos * width
-		val left = Math.max(width/2f - passedWidth, 0f)
-		val height = measuredHeight
-		canvas.drawRect(left, 0f, width/2f, height.toFloat(), _paint)
-	}
-
-	private fun drawRemain(pos: Float, canvas: Canvas) {
-		_paint.color = _remainColor
-		val width = measuredWidth
-		val passedWidth = pos * width
-		val remainWidth = Math.min(width - passedWidth, width/2f)
-		val height = measuredHeight
-		canvas.drawRect(width/2f, 0f, width/2f + remainWidth, height.toFloat(), _paint)
-	}
-
-	private fun drawSeek(canvas: Canvas) {
-		val width = measuredWidth
-		val height = measuredHeight
-
-		if (_seek_pos < _pos) {  // back seek
-			_paint.color = _backSeekColor
-			val dt = _pos - _seek_pos
-			canvas.drawRect(width/2f, 0f, width/2f + dt*width, height.toFloat(), _paint)
-		}
-		else {  // forward seek
-			_paint.color = _forwardSeekColor
-			val dt = _seek_pos - _pos
-			canvas.drawRect(width/2f - dt*width, 0f, width/2f, height.toFloat(), _paint)
-		}
 	}
 
 	/*override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -127,16 +154,25 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 		return super.onTouchEvent(event)
 	}
 
-	private fun clamp(x: Float, minVal: Float, maxVal: Float): Float {
-		return Math.max(Math.min(x, maxVal), minVal)
-	}
-
 	private fun redraw() {
 		invalidate()
 	}
 
+	// helpers
+	private fun clamp(x: Float, minVal: Float, maxVal: Float): Float {
+		return Math.max(Math.min(x, maxVal), minVal)
+	}
+
+	private fun positionToString(seconds: Int): String {
+		return DateUtils.formatElapsedTime(seconds.toLong())
+	}
+
 	private fun dpToPx(dp: Float): Float {
 		return dp * (context.resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT)
+	}
+
+	private fun pxToDp(px: Float): Float {
+		return px / (context.resources.displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT)
 	}
 
 	private var _length = 1  // in s
@@ -154,4 +190,5 @@ class SoundCloudSeekBar(context: Context, attrs: AttributeSet) : View(context, a
 	private val _remainColor: Int = Color.parseColor("#F2F2F2")
 	private val _forwardSeekColor: Int = Color.parseColor("#C62801")
 	private val _backSeekColor: Int = Color.parseColor("#BBBBBB")
+	private var _waveApprox: Bitmap? = null
 }
